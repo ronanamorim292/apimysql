@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npx prisma generate
+RUN env DATABASE_URL="mysql://fake:fake@localhost:3306/db" npx prisma generate
 RUN npm run build
 
 # Stage 2: Production Image
