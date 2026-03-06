@@ -15,7 +15,8 @@ const getModelName = (resource: string) => {
     'transactions': 'transaction',
     'debts': 'debt',
     'employeeadvances': 'employeeAdvance',
-    'commissions': 'commission'
+    'commissions': 'commission',
+    'custom': 'customData'
   };
   return map[resource.toLowerCase()];
 };
@@ -27,6 +28,17 @@ router.get('/:resource', async (req: Request, res: Response) => {
 
   try {
     const tenantId = (req as any).user.tenantId; // Automatically taken from JWT
+    
+    // Tratativa Universal para CustomData
+    if (model === 'customData') {
+      const collectionName = req.query.collection as string;
+      if (!collectionName) return res.status(400).json({ error: 'Missing collection query param (e.g. ?collection=impostos)' });
+      
+      const data = await prisma.customData.findMany({ where: { tenantId, collectionName } });
+      return res.json({ data: data.map(item => ({ id: item.id, ...item.data as any, createdAt: item.createdAt })) });
+    }
+
+    // Tratativa Tradicional Fortemente Tipada
     const data = await (prisma as any)[model].findMany({ where: { tenantId } });
     return res.json({ data });
   } catch (error: any) {
@@ -56,6 +68,17 @@ router.post('/:resource', async (req: Request, res: Response) => {
 
   try {
     const tenantId = (req as any).user.tenantId;
+    
+    if (model === 'customData') {
+      const collectionName = req.query.collection as string;
+      if (!collectionName) return res.status(400).json({ error: 'Missing collection query param for dynamic creation' });
+      
+      const item = await prisma.customData.create({
+        data: { tenantId, collectionName, data: req.body }
+      });
+      return res.status(201).json({ id: item.id, ...item.data as any });
+    }
+
     const dataToSave = { ...req.body, tenantId }; 
     const item = await (prisma as any)[model].create({ data: dataToSave });
     return res.status(201).json(item);
