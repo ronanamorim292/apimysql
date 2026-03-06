@@ -15,14 +15,11 @@ const PORT = process.env.APP_PORT || 3000;
 app.use(helmet());
 
 // Environment based CORS configuration
-const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'];
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Permite todas as origens (inclusive 'null' de arquivos locais file://) 
+    // Ideal para testes iniciais e integração flexível na nuvem
+    callback(null, true);
   },
   credentials: true
 }));
