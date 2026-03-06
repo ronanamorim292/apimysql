@@ -2,6 +2,7 @@
 FROM node:18-alpine AS builder
 
 WORKDIR /app
+RUN apk add --no-cache openssl openssl-dev libc6-compat
 COPY package*.json ./
 RUN npm install
 COPY . .
@@ -13,6 +14,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache openssl libc6-compat
 
 # Copy only the necessary files from builder
 COPY package*.json ./
