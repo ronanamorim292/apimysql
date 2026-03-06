@@ -8,6 +8,7 @@ import { handlePaymentApproved, handlePaymentCancelled, handlePaymentRenewed } f
 import { authenticate, requireRole, validatePermission } from '../middleware/auth';
 import { enforceTenantIsolation } from '../middleware/tenantIsolation';
 import { loginLimiter, apiLimiter } from '../middleware/rateLimiter';
+import dynamicCrud from './dynamicCrud';
 
 const router = Router();
 
@@ -44,5 +45,9 @@ router.post('/webhooks/payment-renewed', handlePaymentRenewed);
 
 // Admin Dashboard Routes (Assuming this acts mostly globally for now, or isolate based on system tenant. Enforce carefully)
 router.get('/admin/dashboard', authenticate, requireRole(['admin']), getAdminDashboardStats);
+
+// 🚀 Dynamic CRUD Catch-all (Must be evaluated at the end or uniquely routed)
+// This will automaticaly power endpoints like /api/data/customers, /api/data/orders, etc.
+router.use('/data', authenticate, dynamicCrud);
 
 export default router;

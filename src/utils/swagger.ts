@@ -126,6 +126,55 @@ const swaggerDocument = {
           200: { description: 'List of active subscriptions' }
         }
       }
+    },
+    '/api/data/{resource}': {
+      get: {
+        summary: 'Dynamic CRUD GET all for a specific resource',
+        tags: ['Dynamic Data System'],
+        parameters: [
+          { name: 'resource', in: 'path', required: true, description: 'Available resources: customers, products, vehicles, orders, orderItems, deliveries, transactions, debts, employeeAdvances, commissions', schema: { type: 'string' } }
+        ],
+        responses: { 200: { description: 'Success items array' } }
+      },
+      post: {
+        summary: 'Dynamic CRUD Create for a specific resource',
+        tags: ['Dynamic Data System'],
+        parameters: [
+          { name: 'resource', in: 'path', required: true, description: 'Available resources: customers, products, vehicles, orders, orderItems, deliveries, transactions, debts, employeeAdvances, commissions', schema: { type: 'string' } }
+        ],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } },
+        responses: { 201: { description: 'Created item' } }
+      }
+    },
+    '/api/data/{resource}/{id}': {
+      get: {
+        summary: 'Dynamic CRUD GET one by ID',
+        tags: ['Dynamic Data System'],
+        parameters: [
+          { name: 'resource', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: { 200: { description: 'Success fetched item' } }
+      },
+      put: {
+        summary: 'Dynamic CRUD Update by ID',
+        tags: ['Dynamic Data System'],
+        parameters: [
+          { name: 'resource', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', description: 'Omit tenantId and id' } } } },
+        responses: { 200: { description: 'Updated item' } }
+      },
+      delete: {
+        summary: 'Dynamic CRUD Delete by ID',
+        tags: ['Dynamic Data System'],
+        parameters: [
+          { name: 'resource', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: { 200: { description: 'Deleted success message' } }
+      }
     }
   },
 };

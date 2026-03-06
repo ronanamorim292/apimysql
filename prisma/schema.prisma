@@ -18,6 +18,15 @@ model Tenant {
   roles         Role[]
   sessions      Session[]
   usages        Usage[]
+  customers    Customer[]
+  products     Product[]
+  vehicles     Vehicle[]
+  orders       Order[]
+  deliveries   Delivery[]
+  transactions Transaction[]
+  debts        Debt[]
+  advances     EmployeeAdvance[]
+  commissions  Commission[]
 }
 
 model Plan {
@@ -81,6 +90,9 @@ model User {
   tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions             Session[]
   logs                 Log[]
+  deliveries           Delivery[]
+  advances             EmployeeAdvance[]
+  commissions          Commission[]
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 }
@@ -119,5 +131,133 @@ model Log {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  address   String?
+  creditLimit Float  @default(0)
+  orders    Order[]
+  debts     Debt[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  description String?
+  price     Float
+  stock     Int      @default(0)
+  orderItems OrderItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plate     String
+  model     String?
+  status    String   @default("active")
+  deliveries Delivery[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customerId String?
+  customer  Customer? @relation(fields: [customerId], references: [id])
+  status    String   @default("pending")
+  total     Float    @default(0)
+  paymentMethod String?
+  items     OrderItem[]
+  delivery  Delivery?
+  commissions Commission[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  price     Float
+}
+
+model Delivery {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driverId  String?
+  driver    User?    @relation(fields: [driverId], references: [id])
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+  status    String   @default("pending")
+  dispatchTime DateTime?
+  deliveryTime DateTime?
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type      String
+  category  String
+  amount    Float
+  description String?
+  createdAt DateTime @default(now())
+}
+
+model Debt {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customerId String
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount    Float
+  status    String   @default("unpaid")
+  dueDate   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmployeeAdvance {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee  User     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  amount    Float
+  reason    String?
+  date      DateTime @default(now())
+}
+
+model Commission {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee  User     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  amount    Float
+  status    String   @default("pending")
   createdAt DateTime @default(now())
 }
