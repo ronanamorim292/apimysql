@@ -41,6 +41,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Advanced Health Check
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send('SaaS API Node/Express is running securely. Please access /health to check database connection.');
+});
+
 app.get('/health', async (req: Request, res: Response) => {
   const health: any = { status: 'UP', timestamp: new Date(), db: 'DOWN' };
   
