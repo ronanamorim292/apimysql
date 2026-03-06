@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SaaS Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h1, h2 { color: #2c3e50; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:hover { background-color: #2980b9; }
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+    .card { background: #ecf0f1; padding: 15px; border-radius: 5px; text-align: center; }
+    .card h3 { margin: 0; font-size: 24px; color: #2980b9; }
+    .card p { margin: 5px 0 0; font-size: 14px; color: #7f8c8d; }
+    #dashboard { display: none; }
+    .error { color: #e74c3c; text-align: center; margin-top: 10px; }
+    .logout-btn { background-color: #e74c3c; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- TELA DE LOGIN -->
+  <div id="login-section">
+    <h1>Login do Sistema SaaS</h1>
+    <p style="text-align: center;">Preencha o link da sua API do EasyPanel e os dados de acesso.</p>
+    
+    <div class="form-group">
+      <label>URL da sua API (Sem a barra / no final)</label>
+      <input type="text" id="apiUrl" value="https://sua-api-easypanel.com" placeholder="Ex: https://minha-api.com">
+    </div>
+    <div class="form-group">
+      <label>Email Admin</label>
+      <input type="email" id="email" value="admin@saas.com">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="password" value="admin123">
+    </div>
+    
+    <button onclick="fazerLogin()">Entrar no Painel</button>
+    <div id="login-error" class="error"></div>
+  </div>
+
+  <!-- TELA DO DASHBOARD ADMIN -->
+  <div id="dashboard">
+    <h2>Dashboard Administrativo</h2>
+    <p style="text-align: center;">Bem-vindo(a)! Seus dados em tempo real:</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3 id="stat-tenants">0</h3>
+        <p>Empresas Ativas</p>
+      </div>
+      <div class="card">
+        <h3 id="stat-users">0</h3>
+        <p>Usuários Totais</p>
+      </div>
+      <div class="card">
+        <h3 id="stat-subs">0</h3>
+        <p>Assinaturas Ativas</p>
+      </div>
+    </div>
+
+    <button class="logout-btn" onclick="sair()">Sair (Logout)</button>
+  </div>
+</div>
+
+<script>
+  let tokenJWT = null;
+
+  async function fazerLogin() {
+    const apiUrl = document.getElementById('apiUrl').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const erroDiv = document.getElementById('login-error');
+
+    erroDiv.innerText = "Carregando...";
+
+    try {
+      // 1. O site faz a chamada Mágica na Rota sozinho
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao fazer login. Verifique as credenciais.");
+      }
+
+      // 2. O site guarda o crachá secretamente e esconde o Login
+      tokenJWT = data.token;
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+
+      // 3. O site carrega os dados gráficos com o Token guardado
+      carregarDashboard(apiUrl);
+
+    } catch (error) {
+      erroDiv.innerText = error.message;
+    }
+  }
+
+  async function carregarDashboard(apiUrl) {
+    try {
+      const response = await fetch(`${apiUrl}/api/admin/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${tokenJWT}` // Apresenta o token invisivelmente
+        }
+      });
+
+      const data = await response.json();
+
+      if(response.ok) {
+        document.getElementById('stat-tenants').innerText = data.stats.totalTenants;
+        document.getElementById('stat-users').innerText = data.stats.totalUsers;
+        document.getElementById('stat-subs').innerText = data.stats.totalSubscriptions;
+      } else {
+        alert("Sua API recusou o acesso! (Provavelmente permissão negada)");
+      }
+
+    } catch (error) {
+      alert("Erro ao buscar dados do Dashboard: " + error.message);
+    }
+  }
+
+  function sair() {
+    tokenJWT = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('login-error').innerText = '';
+  }
+</script>
+
+</body>
+</html>

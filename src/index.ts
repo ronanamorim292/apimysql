@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import apiRoutes from './routes';
 import logger from './utils/logger';
 import prisma from './database/client';
+import { swaggerDocs } from './utils/swagger';
 
 dotenv.config();
 
@@ -57,6 +58,9 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // API Routes Mounted
 app.use('/api', apiRoutes);
+
+// Setup Swagger Documentation
+swaggerDocs(app, PORT);
 
 // Centralized Error Handling
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
